@@ -149,19 +149,19 @@ function npn_save_custom_user_profile_fields( $user_id ) {
     if ($_POST['npn_mailnotify']!='1' AND $usermeta[0] =='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('deactivated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
 
     if(isset($_POST['npn_mailnotify'])){
-      update_usermeta( $user_id, 'npn_mailnotify', $_POST['npn_mailnotify']);
+      update_user_meta( $user_id, 'npn_mailnotify', $_POST['npn_mailnotify']);
     }
     else
     {
-      update_usermeta( $user_id, 'npn_mailnotify', '0');
+      update_user_meta( $user_id, 'npn_mailnotify', '0');
     }
         
     if(isset($_POST['npn_mailnotify_category'])){
-      update_usermeta( $user_id, 'npn_mailnotify_category', implode(',',$_POST['npn_mailnotify_category']));
+      update_user_meta( $user_id, 'npn_mailnotify_category', implode(',',$_POST['npn_mailnotify_category']));
     }
     else
     {
-      update_usermeta( $user_id, 'npn_mailnotify_category', '');
+      update_user_meta( $user_id, 'npn_mailnotify_category', '');
     }
 }
 
