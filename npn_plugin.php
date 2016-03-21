@@ -91,7 +91,7 @@ function npn_add_custom_user_profile_fields( $user ) {
   $categories = get_categories( array('hide_empty'=>0, 'order_by'=>'name') );
   $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
 ?>
-	<h3><?php _e('Notificationservice','npn_plugin'); ?></h3>
+	<h3><?php _e('Notifications','npn_plugin'); ?></h3>
 
 	<table class="form-table">
 		<tr>
@@ -106,7 +106,7 @@ function npn_add_custom_user_profile_fields( $user ) {
         <?php
         foreach ($categories as $category) {
           $category_checked='';
-          if (in_array($category->cat_ID,explode(',',$user_cats[0]))) $category_checked='checked';
+          if (array_key_exists(0, $user_cats) && in_array($category->cat_ID,explode(',',$user_cats[0]))) $category_checked='checked';
         ?>
         </tr>
             <th>
