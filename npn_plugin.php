@@ -145,15 +145,16 @@ function npn_save_custom_user_profile_fields( $user_id ) {
     // Notify the Administrator if anybody activates or deactivates the nofifications.
     $user = get_userdata($user_id);
     $usermeta = get_user_meta($user_id, 'npn_mailnotify');
-    if ($_POST['npn_mailnotify']=='1' AND $usermeta[0] !='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('activated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
-    if ($_POST['npn_mailnotify']!='1' AND $usermeta[0] =='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('deactivated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
 
     if(isset($_POST['npn_mailnotify'])){
       update_user_meta( $user_id, 'npn_mailnotify', $_POST['npn_mailnotify']);
+      if ($_POST['npn_mailnotify']=='1' AND $usermeta[0] !='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('activated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
+      if ($_POST['npn_mailnotify']!='1' AND $usermeta[0] =='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('deactivated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
     }
     else
     {
       update_user_meta( $user_id, 'npn_mailnotify', '0');
+      if ($usermeta[0] =='1') wp_mail(get_option('admin_email'),$user->first_name.' '.__('deactivated subscription to posts.','npn_plugin'),$user->first_name.' '.$user->last_name);
     }
         
     if(isset($_POST['npn_mailnotify_category'])){
