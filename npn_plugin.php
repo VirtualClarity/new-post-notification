@@ -29,36 +29,31 @@ function npn_notify($post_ID) {
     $postcontent = get_post_field('post_content', $post_ID);
     $postthumb = get_the_post_thumbnail( $post_ID, 'medium');
 
-    // get allowed groups to access post //
-    $allowed_groups = npn_get_allowed_groups($post_ID);
-
     // Use HTML-Mails
     add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
 
     // Go through the users and check the access //
     foreach ($users as $user){
-      $access = false;
-      if (empty($allowed_groups)) $access = true;                               // always notify every user on public posts
-      foreach ($user->caps as $key => $value){                                  // assigned capabilities to certain user
-        if (in_array($key,$allowed_groups) AND $value == 1) $access = true;     // check if user is in the right user-group
-        if ($key == 'administrator') $access = true;                            // Admins always get a mail.
-      }
-
       // Check if category is chosen by user
       $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
       $cat_chosen = false;
-      if ($user_cats[0]=='') {
-        $cat_chosen = true;
-      }
-      else
-      {
-        foreach ($postobject->post_category as $postcats) {
-            if (in_array($postcats,explode(',',$user_cats[0]))) $cat_chosen = true;
-        }
-      }
+	if(array_key_exists(0, $user_cats))
+	{
+		if ($user_cats[0]=='')
+		{
+	        	$cat_chosen = true;
+	      	}
+		else
+		{
+			foreach ($postobject->post_category as $postcats)
+			{
+				if (in_array($postcats,explode(',',$user_cats[0]))) $cat_chosen = true;
+			}
+		}
+	}
 
       // send Mail if User activated Notification and there was no notification before.
-      if ($access==true AND $cat_chosen==true AND get_the_author_meta( 'npn_mailnotify', $user->ID )=='1' 
+      if ($cat_chosen==true AND get_the_author_meta( 'npn_mailnotify', $user->ID )=='1' 
       AND get_post_meta( $post_ID, 'npn_notified', true) != '1') {
         wp_mail( $user->data->user_email, '['.get_option('blogname').'] '.__('New Post','npn_plugin').': '
         .$postobject->post_title, npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID));  
@@ -70,16 +65,6 @@ function npn_notify($post_ID) {
      
     update_post_meta($post_ID, 'npn_notified', '1', true);
     return $post_ID;
-}
-
-function npn_get_allowed_groups($postID){
-	global $wpdb;
-	$allowed_group_ids = $wpdb->get_results( "SELECT group_id FROM ".$wpdb->prefix."uam_accessgroup_to_object WHERE object_id = ".$postID." AND object_type = 'post' ");
-    $allowed_group_names = array();
-    foreach ($allowed_group_ids as $group) {
-      array_push($allowed_group_names,npn_get_group_name($group->group_id));
-    }
-    return $allowed_group_names;
 }
 
 function npn_get_group_name($groupID){
