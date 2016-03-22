@@ -33,34 +33,51 @@ function npn_notify($post_ID) {
     add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
 
     // Go through the users and check the access //
-    foreach ($users as $user){
-      // Check if category is chosen by user
-      $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
-      $cat_chosen = false;
-	if(array_key_exists(0, $user_cats))
+	foreach ($users as $user)
 	{
-		if ($user_cats[0]=='')
+		// send Mail if User activated Notification and there was no notification before.
+		$notify_on = (get_the_author_meta('npn_mailnotify', $user->ID) == '0' ? false : true);	// if they have turned it off don't send
+													// if they have not specified or turned it on do send
+		error_log("Notify is set to $notify_on for user ".$user->user_login);
+
+		// Check if category is chosen by user
+		$user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
+		$cat_chosen = false;
+		if(array_key_exists(0, $user_cats))
 		{
-	        	$cat_chosen = true;
-	      	}
-		else
-		{
-			foreach ($postobject->post_category as $postcats)
+			if ($user_cats[0]=='')
 			{
-				if (in_array($postcats,explode(',',$user_cats[0]))) $cat_chosen = true;
+		        	$cat_chosen = true;
+		      	}
+			else
+			{
+				foreach ($postobject->post_category as $postcats)
+				{
+					if (in_array($postcats,explode(',',$user_cats[0]))) $cat_chosen = true;
+				}
 			}
 		}
-	}
+		else
+		{
+			error_log("User has not chosen any categories");
+			$cat_chosen = true;			// If they haven't chosen categories, they get all of them
+		}
 
-      // send Mail if User activated Notification and there was no notification before.
-	$notify_on = (get_the_author_meta('npn_mailnotify', $user->ID) == '0' ? false : true);	// if they have turned it off don't send
-												// if they have not specified or turned it on do send
-	error_log("Notify is set to $notify_on for user ".$user->user_login);
-      if ($cat_chosen==true AND $notify_on AND get_post_meta( $post_ID, 'npn_notified', true) != '1') {
-        wp_mail( $user->data->user_email, '['.get_option('blogname').'] '.__('New Post','npn_plugin').': '
-        .$postobject->post_title, npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID));  
-      }
-     }
+		// Send email if conditions are correct
+		if ($cat_chosen==true)
+		{
+	 		if($notify_on AND get_post_meta( $post_ID, 'npn_notified', true) != '1')
+			{
+				error_log("Sending email notification for ".$postobject->post_title." to ".$user->data->user_email);
+	        		wp_mail( $user->data->user_email, '['.get_option('blogname').'] '.__('New Post','npn_plugin').': '
+					.$postobject->post_title, npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID));  
+			}
+		}
+		else
+		{
+			error_log("Post categories are not selected for notification by user ".$user->user_login);
+		}
+	}
      
      // Use default plain
      add_filter('wp_mail_content_type',create_function('', 'return "text/plain"; '));
