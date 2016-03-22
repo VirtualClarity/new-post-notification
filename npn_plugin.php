@@ -53,8 +53,10 @@ function npn_notify($post_ID) {
 	}
 
       // send Mail if User activated Notification and there was no notification before.
-      if ($cat_chosen==true AND get_the_author_meta( 'npn_mailnotify', $user->ID )=='1' 
-      AND get_post_meta( $post_ID, 'npn_notified', true) != '1') {
+	$notify_on = (get_the_author_meta('npn_mailnotify', $user->ID) == '0' ? false : true);	// if they have turned it off don't send
+												// if they have not specified or turned it on do send
+	error_log("Notify is set to $notify_on for user ".$user->user_login);
+      if ($cat_chosen==true AND $notify_on AND get_post_meta( $post_ID, 'npn_notified', true) != '1') {
         wp_mail( $user->data->user_email, '['.get_option('blogname').'] '.__('New Post','npn_plugin').': '
         .$postobject->post_title, npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID));  
       }
@@ -185,25 +187,33 @@ function npn_add_mailnotify_column($columns) {
 }
 
 add_action('manage_users_custom_column',  'npn_add_mailnotify_column_content', 10, 3);
-function npn_add_mailnotify_column_content($value, $column_name, $user_id) {
-    $user = get_userdata( $user_id );
-	if ( 'npn_mailnotify' == $column_name ){
-        $mailstatus = get_user_meta($user_id, 'npn_mailnotify');
-        $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
-		if ($mailstatus[0]=='1') {
-        $user_cats = explode(',',$user_cats[0]);
-        $out = '';
-        foreach ($user_cats as $category){
-          $out .= get_cat_name($category).', ';        
-        }
-        if ($out == ', ') {return __('All categories','npn_plugin');} else return $out;    
-      } 
-      else 
-      {
-        return __('not active','npn_plugin');
-      }
-    }
-    return $value;
+function npn_add_mailnotify_column_content($value, $column_name, $user_id)
+{
+	$user = get_userdata( $user_id );
+	if ( 'npn_mailnotify' == $column_name )
+	{
+	        $mailstatus = get_user_meta($user_id, 'npn_mailnotify');
+	        $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
+		if ($mailstatus[0]=='1')
+		{
+			$user_cats = explode(',',$user_cats[0]);
+		        $out = '';
+		        foreach ($user_cats as $category)
+			{
+				$out .= get_cat_name($category).', ';        
+		        }
+		        if ($out == ', ') {return __('All categories','npn_plugin');} else return $out;    
+		}
+		else if ($mailstatus[0]=='')
+		{
+			return __('All categories (defaulted)', 'npn_plugin');
+		}
+		else 
+		{
+			return __('not active','npn_plugin');
+	      	}
+	}
+	return $value;
 }
 
 /* Not yet active.
