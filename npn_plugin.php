@@ -86,8 +86,21 @@ function npn_generate_mail_content($postobject,$postcontent,$postthumb,$userid){
 
 // Settings in Profile //
 
-function npn_add_custom_user_profile_fields( $user ) {
-  if (get_the_author_meta( 'npn_mailnotify', $user->ID ) == '1') $checked = 'checked'; else $checked = '';
+function npn_add_custom_user_profile_fields( $user )
+{
+	$notify_setting = get_the_author_meta('npn_mailnotify', $user->ID);
+	switch($notify_setting)
+	{
+		case "":				// default, user has not previously made a choice
+			$checked = 'checked';
+			break;
+		case "0";				// user switched it off
+			$checked = '';
+			break;
+		case "1";				// user switched it on
+			$checked = 'checked';
+			break;
+	}
   $categories = get_categories( array('hide_empty'=>0, 'order_by'=>'name') );
   $user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
 ?>
