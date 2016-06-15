@@ -38,13 +38,14 @@ function npn_notify($post_ID) {
 		// send Mail if User activated Notification and there was no notification before.
 		$notify_on = (get_the_author_meta('npn_mailnotify', $user->ID) == '0' ? false : true);	// if they have turned it off don't send
 													// if they have not specified or turned it on do send
-		error_log("Notify is set to $notify_on for user ".$user->user_login);
+		error_log($user->user_login.": Notify is set to $notify_on");
 
 		// Check if category is chosen by user
 		$user_cats = get_user_meta($user->ID, 'npn_mailnotify_category');
 		$cat_chosen = false;
 		if(array_key_exists(0, $user_cats))
 		{
+			error_log($user->user_login.": User has chosen categories");
 			if ($user_cats[0]=='')
 			{
 		        	$cat_chosen = true;
@@ -59,23 +60,37 @@ function npn_notify($post_ID) {
 		}
 		else
 		{
-			error_log("User has not chosen any categories");
+			error_log($user->user_login.": User has not chosen any categories");
 			$cat_chosen = true;			// If they haven't chosen categories, they get all of them
 		}
 
 		// Send email if conditions are correct
 		if ($cat_chosen==true)
 		{
+			error_log($user->user_login.": One or more post categories are selected for notification");
 	 		if($notify_on AND get_post_meta( $post_ID, 'npn_notified', true) != '1')
-			{
+			{			
+				$headers = array('from: Inner Clarity <inner.clarity@virtualclarity.com>');
 				error_log("Sending email notification for ".$postobject->post_title." to ".$user->data->user_email);
-	        		wp_mail( $user->data->user_email, '['.get_option('blogname').'] '.__('New Post','npn_plugin').': '
-					.$postobject->post_title, npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID));  
+
+        			$sent = wp_mail( $user->data->user_email, __('New Post','npn_plugin').': '.$postobject->post_title, 						npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID), $headers);
+				if($sent==true)
+				{
+					error_log($user->user_login.": Sent email");
+				}
+				else
+				{
+					error_log($user->user_login.": Failed to send email");
+				}
+			}
+			else
+			{
+				error_log($user->user_login.": Notify is off or post already notified");
 			}
 		}
 		else
 		{
-			error_log("Post categories are not selected for notification by user ".$user->user_login);
+			error_log($user->user_login.": No post categories are not selected for notification");
 		}
 	}
      
@@ -96,7 +111,7 @@ function npn_generate_mail_content($postobject,$postcontent,$postthumb,$userid){
     $userdata = get_userdata($userid);
     $authordata = get_userdata($postobject->post_author);
     $mailcontent = __('Hello','npn_plugin').' '.$userdata->first_name.',<br>';
-    $mailcontent .= $authordata->first_name.' '.__('published a new post','npn_plugin').' '.__('at','npn_plugin').' '.get_option('blogname').':<br>';
+    $mailcontent .= $authordata->first_name.' '.$authordata->last_name.' '.__('published a new post','npn_plugin').' '.__('at','npn_plugin').' '.get_option('blogname').':<br>';
     $mailcontent .= '<h2><a href="'.$postobject->guid.'&refferer=mailnotify&uid='.$userid.'">'.$postobject->post_title.'</a></h2>'.implode(' ', array_slice(explode(' ', $postcontent), 0, 40)).' <a href="'.$postobject->guid.'&refferer=mailnotify&uid='.$userid.'">[...]</a>';
     $mailcontent .= '<br><br><small>'.__('To stop these notifications, go to your ','npn_plugin').' <a href="'.get_bloginfo('wpurl').'/wp-admin/profile.php">'.__('profile','npn_plugin').'</a>. '.__('You can also choose which categeries you intereseted in.','npn_plugin').'</small>';
 
@@ -232,6 +247,14 @@ function npn_add_mailnotify_column_content($value, $column_name, $user_id)
 	}
 	return $value;
 }
+
+add_filter('wp_mail_failed', 'print_mail_error');
+function print_mail_error($exception)
+{
+	$code = $exception->get_error_code();
+	error_log($code." ".$exception->get_error_message($code)." ".$exception->get_error_data($code));
+}
+
 
 /* Not yet active.
 // activate subscription to all users when first activating the plugin
