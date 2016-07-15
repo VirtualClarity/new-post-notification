@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: New Post Notification
- * Plugin URI:  http://kilozwo.de/wordpress-new-post-notification-plugin
- * Description: Simply notifies users if a new post has been published. This is an addon for User-Access-Manager. Users will only be notified if they have access. Your subscribers can also decide which posts they would like to be noticed on.
- * Version:     1.0.10
- * Author:      Jan Eichhorn
- * Author URI:  http://kilozwo.de
+ * Plugin URI:  https://github.com/VirtualClarity/new-post-notification
+ * Description: Notifies users if a new post has been published. Subscribers can also decide which categories they would like to be notified of changes to.
+ * Version:     1.0.11
+ * Author:      Jan Eichhorn / Virtual Clarity
+ * Author URI:  http://www.virtualclarity.com
  * License:     GPLv2
  */
 
@@ -255,6 +255,56 @@ function print_mail_error($exception)
 	error_log($code." ".$exception->get_error_message($code)." ".$exception->get_error_data($code));
 }
 
+/*
+ * Add a Settings page for this Plugin.
+ */
+add_action('admin_menu', 'npn_create_menu');
+function npn_create_menu()
+{
+    add_options_page( 'New Post Notification Settings', 'New Post Notification', 'manage_options', 'npnsettings', 'npn_settings_page');
+}
+/*
+ * Function to display the settings page.
+ */
+function npn_settings_page()
+{
+?>
+<div>
+<h2>New Post Notification Settings</h2>
+Options relating to the New Post Notification plugin.
+<form action="options.php" method="post">
+<?php settings_fields('npn_settings'); ?>
+<?php do_settings_sections('npn_settings_page'); ?>
+<input name="Submit" type="submit" value="<?php esc_attr_e('Save Changes'); ?>" />
+</form></div>
+<?php
+}
+/*
+ * Register the custom options for this plugin.
+ */
+add_action( 'admin_init', 'npn_register_settings' );
+function npn_register_settings()
+{
+    //register settings
+    register_setting( 'npn_settings', 'npn_from_name' );
+	add_settings_section('npn_settings_main', '', 'render_npn_settings_main', 'npn_settings_page');
+	add_settings_field('npn_from_name', 'From Name', 'npn_renderFromName', 'npn_settings_page', 'npn_settings_main');
+	add_settings_field('npn_from_email', 'From Email', 'npn_renderFromEmail', 'npn_settings_page', 'npn_settings_main');
+}
+
+function npn_renderFromName() {
+	$name= get_option('npn_from_name');
+	
+	echo "<input id='plugin_text_string' name='npn_from_name' size='80' type='text' value='{$name}' /><br/>
+The name that email notifications will appear to have come from such as 'My Site'";
+}
+
+function npn_renderFromEmail() {
+	$email= get_option('npn_from_email');
+	
+	echo "<input id='plugin_text_string' name='npn_from_email' size='80' type='text' value='{$email}' /><br/>
+The email address that email notifications will appear to have come from such as 'newpost@mysite.com'";
+}
 
 /* Not yet active.
 // activate subscription to all users when first activating the plugin
