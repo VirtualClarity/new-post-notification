@@ -81,8 +81,14 @@ function npn_notify($post_ID) {
 					$from_string = $from_string.'<'.get_option('npn_from_email').'>';
 					$headers = array($from_string);
 				}
-				error_log("Sending email notification for ".$postobject->post_title." to ".$user->data->user_email);
+				
+				if(NULL !== get_option('npn_debug_mode'))
+				{
+					error_log("DEBUG: Pretending to send email notification for ".$postobject->post_title." to ".$user->data->user_email);
+					continue;
+				}
 
+				error_log("Sending email notification for ".$postobject->post_title." to ".$user->data->user_email);
         		$sent = wp_mail( $user->data->user_email, __('New Post','npn_plugin').': '.$postobject->post_title,	npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID), $headers);
 				if($sent==true)
 				{
@@ -300,20 +306,27 @@ function npn_register_settings()
 	add_settings_section('npn_settings_main', '', 'render_npn_settings_main', 'npn_settings_page');
 	add_settings_field('npn_from_name', 'From Name', 'npn_renderFromName', 'npn_settings_page', 'npn_settings_main');
 	add_settings_field('npn_from_email', 'From Email', 'npn_renderFromEmail', 'npn_settings_page', 'npn_settings_main');
+	add_settings_field('npn_debug_mode', 'Debug Mode', 'npn_renderDebugMode', 'npn_settings_page', 'npn_settings_main');
 }
 
 function npn_renderFromName() {
 	$name= get_option('npn_from_name');
 	
 	echo "<input id='plugin_text_string' name='npn_from_name' size='80' type='text' value='{$name}' /><br/>
-The name that email notifications will appear to have come from such as 'My Site'";
+The name that email notifications will appear to have come from such as 'My Site'. NOT SANITISED, so don't put rubbish in here.";
 }
 
 function npn_renderFromEmail() {
 	$email= get_option('npn_from_email');
 	
 	echo "<input id='plugin_text_string' name='npn_from_email' size='80' type='text' value='{$email}' /><br/>
-The email address that email notifications will appear to have come from such as 'newpost@mysite.com'";
+The email address that email notifications will appear to have come from such as 'newpost@mysite.com'. NOT SANITISED, so dont put rubbish in here.";
+}
+
+function npn_renderDebugMode() {
+	$debug= get_option('npn_debug_mode');
+	echo "<input type='checkbox' name='npn_debug_mode' value='1'".checked($debug)." /><br/>
+If this is enabled, all the logic for sending email is followed but no email is actually sent. See debug.log for lots of output describing who would have been sent an email.";
 }
 
 /* Not yet active.
