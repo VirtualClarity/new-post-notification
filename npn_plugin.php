@@ -70,10 +70,20 @@ function npn_notify($post_ID) {
 			error_log($user->user_login.": One or more post categories are selected for notification");
 	 		if($notify_on AND get_post_meta( $post_ID, 'npn_notified', true) != '1')
 			{			
-				$headers = array('from: Inner Clarity <inner.clarity@virtualclarity.com>');
+				$headers = NULL;
+				if(NULL !== get_option('npn_from_email'))
+				{
+					$from_string = 'from: ';
+					if(NULL !== get_option('npn_from_name'))
+					{
+						$from_string = $from_string.get_option('npn_from_name').' ';
+					}
+					$from_string = $from_string.'<'.get_option('npn_from_email').'>';
+					$headers = array($from_string);
+				}
 				error_log("Sending email notification for ".$postobject->post_title." to ".$user->data->user_email);
 
-        			$sent = wp_mail( $user->data->user_email, __('New Post','npn_plugin').': '.$postobject->post_title, 						npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID), $headers);
+        		$sent = wp_mail( $user->data->user_email, __('New Post','npn_plugin').': '.$postobject->post_title,	npn_generate_mail_content($postobject,$postcontent,$postthumb,$user->ID), $headers);
 				if($sent==true)
 				{
 					error_log($user->user_login.": Sent email");
