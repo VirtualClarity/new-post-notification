@@ -32,6 +32,22 @@ function npn_notify($post_ID) {
     // Use HTML-Mails
     add_filter('wp_mail_content_type',create_function('', 'return "text/html"; '));
 
+	// Find our always category
+	$always = get_option('npn_always_notify_category');
+	$always_id = -1;
+	if($always != '')
+	{
+		$always_id = get_cat_ID($always);
+		if($always_id < 1)
+		{
+			error_log("Always notify category '$always' is not a valid category as far as Wordpress is concerned. Ignoring");
+		}
+		else
+		{
+			error_log("Always notify category $always has the ID $always_id");
+		}
+	}
+
     // Go through the users and check the access //
 	foreach ($users as $user)
 	{
@@ -49,12 +65,19 @@ function npn_notify($post_ID) {
 			if ($user_cats[0]=='')
 			{
 		        	$cat_chosen = true;
-		      	}
+		    }
 			else
 			{
-				foreach ($postobject->post_category as $postcats)
+				foreach ($postobject->post_category as $postcat)
 				{
-					if (in_array($postcats,explode(',',$user_cats[0]))) $cat_chosen = true;
+					if (in_array($postcat,explode(',',$user_cats[0]))) $cat_chosen = true;
+					if ($always_id > 0 AND $postcat==$always_id)
+					{
+						error_log("Post is in the always notify category $always; ignoring user settings and notifying");
+						$cat_chosen = true;
+						$notify_on = true;
+					}
+					error_log($postcat);
 				}
 			}
 		}
@@ -304,37 +327,46 @@ function npn_register_settings()
     //register settings
     register_setting( 'npn_settings', 'npn_from_name' );
     register_setting( 'npn_settings', 'npn_from_email' );
-    register_setting( 'npn_settings', 'npn_debug_mode', 'npn_validateDebug' );
+    register_setting( 'npn_settings', 'npn_always_notify_category', 'npn_validateAlwaysNotifyCategory' );
+    register_setting( 'npn_settings', 'npn_debug_mode' );
 	add_settings_section('npn_settings_main', '', 'npn_renderMainSettings', 'npn_settings_page');
 	add_settings_field('npn_from_name', 'From Name', 'npn_renderFromName', 'npn_settings_page', 'npn_settings_main');
 	add_settings_field('npn_from_email', 'From Email', 'npn_renderFromEmail', 'npn_settings_page', 'npn_settings_main');
+	add_settings_field('npn_always_notify_category', 'Always Notify Category', 'npn_renderAlwaysNotifyCategory', 'npn_settings_page', 'npn_settings_main');
 	add_settings_field('npn_debug_mode', 'Debug Mode', 'npn_renderDebugMode', 'npn_settings_page', 'npn_settings_main');
 }
 
 function npn_renderMainSettings() {};
 
-function npn_validateDebug($input) {
-	error_log("Dumping \$input");
-	error_log(var_export($input, true));
-	foreach($input as $key => $value)
-	{
-		error_log("$key: $value was submitted");
-	}
+function npn_validateAlwaysNotifyCategory($input) {
+#	error_log("Dumping \$input");
+#	error_log(var_export($input, true));
+#	foreach($input as $key => $value)
+#	{
+#		error_log("$key: $value was submitted");
+#	}
 	return $input;
 }
 
 function npn_renderFromName() {
-	$name= get_option('npn_from_name');
+	$name = get_option('npn_from_name');
 	
 	echo "<input id='plugin_text_string' name='npn_from_name' size='80' type='text' value='{$name}' /><br/>
 The name that email notifications will appear to have come from such as 'My Site'. NOT SANITISED, so don't put rubbish in here.";
 }
 
 function npn_renderFromEmail() {
-	$email= get_option('npn_from_email');
+	$email = get_option('npn_from_email');
 	
 	echo "<input id='plugin_text_string' name='npn_from_email' size='80' type='text' value='{$email}' /><br/>
-The email address that email notifications will appear to have come from such as 'newpost@mysite.com'. NOT SANITISED, so dont put rubbish in here.";
+The email address that email notificaations will appear to have come from, such as 'notify@mysite.com'. NOT SANITISED, so don't put rubbish here.";
+}
+
+function npn_renderAlwaysNotifyCategory() {
+	$always = get_option('npn_always_notify_category');
+	
+	echo "<input id='plugin_text_string' name='npn_always_notify_category' size='80' type='text' value='{$always}' /><br/>
+If the post is put in this category, users will always be notified of it, regardless of their notification settings. Use the visible name (such as 'All Staff'), not the slug (such as 'all-staff'). NOT SANITISED - if you type it wrong or put something on the end, it just won't match and emails won't be sent. If so you'll see stuff on debug.log";
 }
 
 function npn_renderDebugMode() {
