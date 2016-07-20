@@ -106,7 +106,7 @@ function npn_notify($post_ID) {
 		}
 		else
 		{
-			error_log($user->user_login.": No post categories are not selected for notification");
+			error_log($user->user_login.": No post categories are selected for notification");
 		}
 	}
      
