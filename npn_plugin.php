@@ -302,7 +302,9 @@ add_action( 'admin_init', 'npn_register_settings' );
 function npn_register_settings()
 {
     //register settings
-    register_setting( 'npn_settings', 'npn_from_name', 'npn_optionsValidate' );
+    register_setting( 'npn_settings', 'npn_from_name' );
+    register_setting( 'npn_settings', 'npn_from_email' );
+    register_setting( 'npn_settings', 'npn_debug_mode', 'npn_validateDebug' );
 	add_settings_section('npn_settings_main', '', 'npn_renderMainSettings', 'npn_settings_page');
 	add_settings_field('npn_from_name', 'From Name', 'npn_renderFromName', 'npn_settings_page', 'npn_settings_main');
 	add_settings_field('npn_from_email', 'From Email', 'npn_renderFromEmail', 'npn_settings_page', 'npn_settings_main');
@@ -311,12 +313,13 @@ function npn_register_settings()
 
 function npn_renderMainSettings() {};
 
-function npn_optionsValidate($input) {
+function npn_validateDebug($input) {
+	error_log("Dumping \$input");
 	error_log(var_export($input, true));
-#	foreach($input as $key => $value)
-#	{
-#		error_log("$key: $value was submitted");
-#	}
+	foreach($input as $key => $value)
+	{
+		error_log("$key: $value was submitted");
+	}
 	return $input;
 }
 
@@ -335,10 +338,9 @@ The email address that email notifications will appear to have come from such as
 }
 
 function npn_renderDebugMode() {
-	$debug = get_option('npn_debug_mode');
-	error_log($debug." was retrieved");
-	echo "<input type='checkbox' name='npn_debug_mode' value='1'".checked($debug)." /><br/>
-If this is enabled, all the logic for sending email is followed but no email is actually sent. See debug.log for lots of output describing who would have been sent an email.";
+	?>
+	<input type='checkbox' name='npn_debug_mode' value='1' <?php checked('1', get_option('npn_debug_mode')); ?>/><br/>
+If this is enabled, all the logic for sending email is followed but no email is actually sent. See debug.log for lots of output describing who would have been sent an email. <?php
 }
 
 /* Not yet active.
