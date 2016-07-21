@@ -151,7 +151,7 @@ function npn_generate_mail_content($postobject,$postcontent,$postthumb,$userid){
     $authordata = get_userdata($postobject->post_author);
     $mailcontent = __('Hello','npn_plugin').' '.$userdata->first_name.',<br>';
     $mailcontent .= $authordata->first_name.' '.$authordata->last_name.' '.__('published a new post','npn_plugin').' '.__('at','npn_plugin').' '.get_option('blogname').':<br>';
-    $mailcontent .= '<h2><a href="'.$postobject->guid.'&refferer=mailnotify&uid='.$userid.'">'.$postobject->post_title.'</a></h2>'.implode(' ', array_slice(explode(' ', $postcontent), 0, 40)).' <a href="'.$postobject->guid.'&refferer=mailnotify&uid='.$userid.'">[...]</a>';
+    $mailcontent .= '<h2><a href="'.$postobject->guid.'&referer=mailnotify&uid='.$userid.'">'.$postobject->post_title.'</a></h2>'.implode(' ', array_slice(explode(' ', $postcontent), 0, 40)).' <a href="'.$postobject->guid.'&referer=mailnotify&uid='.$userid.'">[...]</a>';
     $mailcontent .= '<br><br><small>'.__('To stop these notifications, go to your ','npn_plugin').' <a href="'.get_bloginfo('wpurl').'/wp-admin/profile.php">'.__('profile','npn_plugin').'</a>. '.__('You can also choose which categeries you intereseted in.','npn_plugin').'</small>';
 
     return $mailcontent;
