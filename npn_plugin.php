@@ -102,10 +102,11 @@ function npn_notify($post_ID) {
 						$from_string = $from_string.get_option('npn_from_name').' ';
 					}
 					$from_string = $from_string.'<'.get_option('npn_from_email').'>';
+					error_log("From $from_string");
 					$headers = array($from_string);
 				}
 				
-				if(NULL !== get_option('npn_debug_mode'))
+				if(1 == get_option('npn_debug_mode'))
 				{
 					error_log("DEBUG: Pretending to send email notification for ".$postobject->post_title." to ".$user->data->user_email);
 					continue;
@@ -370,6 +371,7 @@ If the post is put in this category, users will always be notified of it, regard
 }
 
 function npn_renderDebugMode() {
+	error_log(get_option('npn_debug_mode'));
 	?>
 	<input type='checkbox' name='npn_debug_mode' value='1' <?php checked('1', get_option('npn_debug_mode')); ?>/><br/>
 If this is enabled, all the logic for sending email is followed but no email is actually sent. See debug.log for lots of output describing who would have been sent an email. <?php
